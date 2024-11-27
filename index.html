@@ -91,6 +91,81 @@
 
     section {
       padding: 50px 0;
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+
+    section:nth-child(1) {
+      animation-delay: 0.5s;
+    }
+    section:nth-child(2) {
+      animation-delay: 1s;
+    }
+    section:nth-child(3) {
+      animation-delay: 1.5s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 0, 0, 0.1);
+      border-top: 5px solid #0078d7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    body.loading #loadingSpinner {
+      display: block;
+    }
+
+    body:not(.loading) #loadingSpinner {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .button-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+      }
+
+      table, th, td {
+        font-size: 14px;
+      }
+
+      nav a {
+        display: block;
+        margin: 10px 0;
+      }
     }
   </style>
 </head>
@@ -105,6 +180,8 @@
     <a href="#section2">Section 2</a>
     <a href="#section3">Section 3</a>
   </nav>
+
+  <div id="loadingSpinner" class="spinner"></div>
 
   <div class="container">
     <!-- Section 1 -->
@@ -215,43 +292,4 @@
 
         if (engagementChart.data.labels.length > 20) {
           engagementChart.data.labels.shift();
-          engagementChart.data.datasets.forEach(dataset => dataset.data.shift());
-        }
-        engagementChart.update();
-
-        // Store Data
-        dataStore.push({ time, physical, mental, emotional, spiritual });
-        time++;
-      }, 1000);
-    });
-
-    // Stop Tracking
-    document.getElementById('stopTracking').addEventListener('click', () => {
-      if (trackingInterval) {
-        clearInterval(trackingInterval);
-        alert('Tracking Stopped');
-      } else {
-        alert('Tracking is not active.');
-      }
-    });
-
-    // Export Data
-    document.getElementById('exportData').addEventListener('click', () => {
-      if (dataStore.length === 0) {
-        alert('No data to export. Please start tracking first.');
-        return;
-      }
-
-      const csvContent = "data:text/csv;charset=utf-8," +
-        ["Time,Physical,Mental,Emotional,Spiritual"]
-          .concat(dataStore.map(row => `${row.time},${row.physical.toFixed(2)},${row.mental.toFixed(2)},${row.emotional.toFixed(2)},${row.spiritual.toFixed(2)}`))
-          .join("\n");
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "engagement_data.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-   
+          engagementChart.data
