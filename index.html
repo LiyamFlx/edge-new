@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EngageSense - Real-Time Engagement Tracking</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* General Styles */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -14,7 +15,13 @@
       background-color: #f3f3f3;
       color: #333;
       text-align: center;
-      scroll-behavior: smooth; /* Smooth scrolling */
+      scroll-behavior: smooth;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
     }
 
     header {
@@ -92,28 +99,13 @@
     section {
       padding: 50px 0;
       opacity: 0;
-      animation: fadeIn 1s ease-in-out forwards;
+      transform: translateY(20px);
+      transition: opacity 1s ease-in-out, transform 1s ease-in-out;
     }
 
-    section:nth-child(1) {
-      animation-delay: 0.5s;
-    }
-    section:nth-child(2) {
-      animation-delay: 1s;
-    }
-    section:nth-child(3) {
-      animation-delay: 1.5s;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .spinner {
@@ -173,123 +165,181 @@
   <header>
     <h1>EngageSense</h1>
     <p>Track Real-Time Physical, Mental, Emotional, and Spiritual Engagement</p>
+    <button id="toggleDarkMode">Toggle Dark Mode</button>
   </header>
 
   <nav>
-    <a href="#section1">Section 1</a>
-    <a href="#section2">Section 2</a>
-    <a href="#section3">Section 3</a>
+    <a href="#startScreen">Start</a>
+    <a href="#dataInputScreen">Data Input</a>
+    <a href="#analysisScreen">Analysis</a>
+    <a href="#insightsScreen">Insights</a>
+    <a href="#dashboardScreen">Dashboard</a>
+    <a href="#feedback">Feedback</a>
   </nav>
 
   <div id="loadingSpinner" class="spinner"></div>
 
   <div class="container">
-    <!-- Section 1 -->
-    <section id="section1">
-      <h2>Section 1</h2>
-      <p>Content for section 1...</p>
+    <!-- Start Screen -->
+    <section id="startScreen">
+      <h2>Welcome to EngageSense</h2>
+      <p>Empowering performers with real-time intelligence and deep analytics.</p>
+      <button id="getStarted">Get Started</button>
     </section>
 
-    <!-- Section 2 -->
-    <section id="section2">
-      <h2>Section 2</h2>
-      <p>Content for section 2...</p>
+    <!-- Data Input Screen -->
+    <section id="dataInputScreen">
+      <h2>Data Input</h2>
+      <p>Connect your wearable devices or upload data files for analysis.</p>
+      <div class="button-row">
+        <button id="connectWearable">Connect Wearable</button>
+        <input type="file" id="fileUpload" style="display: none;">
+        <button id="uploadFile">Upload File</button>
+      </div>
+      <div id="livePreview">Live Data Preview</div>
     </section>
 
-    <!-- Section 3 -->
-    <section id="section3">
-      <h2>Section 3</h2>
-      <p>Content for section 3...</p>
+    <!-- Analysis Screen -->
+    <section id="analysisScreen">
+      <h2>Analysis</h2>
+      <canvas id="engagementChart" width="400" height="200"></canvas>
     </section>
 
-    <!-- Button Row -->
-    <div class="button-row">
-      <button id="startTracking">Start Tracking</button>
-      <button id="stopTracking">Stop Tracking</button>
-      <button id="exportData">Export Data</button>
-    </div>
+    <!-- Insights & Recommendations Screen -->
+    <section id="insightsScreen">
+      <h2>Insights & Recommendations</h2>
+      <div id="engagementScore">Engagement Score Breakdown</div>
+      <div id="recommendations">Actionable Recommendations</div>
+    </section>
 
-    <!-- Data Table -->
-    <table>
-      <thead>
-        <tr>
-          <th>Time (s)</th>
-          <th>Physical Engagement</th>
-          <th>Mental Engagement</th>
-          <th>Emotional Engagement</th>
-          <th>Spiritual Engagement</th>
-        </tr>
-      </thead>
-      <tbody id="dataTable">
-        <!-- Dynamic data rows go here -->
-      </tbody>
-    </table>
+    <!-- Dashboard & Report Export Screen -->
+    <section id="dashboardScreen">
+      <h2>Dashboard & Reports</h2>
+      <div id="dashboard">Polished, Professional Dashboard</div>
+      <button id="exportReport">Export Report</button>
+    </section>
 
-    <!-- Chart -->
-    <canvas id="engagementChart" width="400" height="200"></canvas>
+    <!-- Feedback Form -->
+    <section id="feedback">
+      <h2>Feedback</h2>
+      <form id="feedbackForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="feedback">Feedback:</label>
+        <textarea id="feedback" name="feedback" required></textarea>
+        <button type="submit">Submit</button>
+      </form>
+    </section>
   </div>
 
   <script>
-    const dataStore = [];
-    let time = 0;
-    let trackingInterval;
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('loading');
+      window.addEventListener('load', () => {
+        document.body.classList.remove('loading');
+      });
 
-    // Initialize Chart
-    const ctx = document.getElementById('engagementChart').getContext('2d');
-    const engagementChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          { label: 'Physical Engagement', data: [], borderColor: 'blue', fill: false },
-          { label: 'Mental Engagement', data: [], borderColor: 'purple', fill: false },
-          { label: 'Emotional Engagement', data: [], borderColor: 'red', fill: false },
-          { label: 'Spiritual Engagement', data: [], borderColor: 'green', fill: false }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Real-Time Engagement Metrics'
+      const sections = document.querySelectorAll('section');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
           }
-        },
-        scales: {
-          y: { beginAtZero: true },
-          x: { title: { display: true, text: 'Time (s)' } }
+        });
+      }, { threshold: 0.1 });
+
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+
+      document.getElementById('toggleDarkMode').addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+      });
+
+      document.getElementById('getStarted').addEventListener('click', () => {
+        document.getElementById('dataInputScreen').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      document.getElementById('connectWearable').addEventListener('click', () => {
+        alert('Connecting to wearable device...');
+      });
+
+      document.getElementById('uploadFile').addEventListener('click', () => {
+        document.getElementById('fileUpload').click();
+      });
+
+      document.getElementById('fileUpload').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          alert(`File ${file.name} uploaded successfully!`);
         }
-      }
+      });
+
+      const ctx = document.getElementById('engagementChart').getContext('2d');
+      new Chart(ctx, {        type: 'bar',
+        data: {
+          labels: ['Physical', 'Mental', 'Emotional', 'Spiritual'],
+          datasets: [{
+            label: 'Engagement Levels',
+            data: [75, 65, 80, 70], // Sample data, replace with dynamic values if needed
+            backgroundColor: [
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(255, 206, 86, 0.6)'
+            ],
+            borderColor: [
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(75, 192, 192, 1)',
+              'rgba(255, 206, 86, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Engagement Analysis'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      document.getElementById('exportReport').addEventListener('click', () => {
+        const csvContent = "data:text/csv;charset=utf-8,"
+          + "Metric,Engagement Level\n"
+          + "Physical,75\n"
+          + "Mental,65\n"
+          + "Emotional,80\n"
+          + "Spiritual,70\n"; // Replace with dynamic data if needed
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "engagement_report.csv");
+        document.body.appendChild(link);
+        link.click();
+      });
+
+      document.getElementById('feedbackForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const name = document.getElementById('name').value;
+        const feedback = document.getElementById('feedback').value;
+        alert(`Thank you, ${name}, for your feedback: "${feedback}"`);
+        document.getElementById('feedbackForm').reset();
+      });
     });
-
-    // Start Tracking
-    document.getElementById('startTracking').addEventListener('click', () => {
-      alert("Tracking Started");
-      trackingInterval = setInterval(() => {
-        const physical = Math.random() * 100;
-        const mental = Math.random() * 100;
-        const emotional = Math.random() * 100;
-        const spiritual = Math.random() * 100;
-
-        // Update Table
-        const dataRow = `
-          <tr>
-            <td>${time}</td>
-            <td>${physical.toFixed(2)}</td>
-            <td>${mental.toFixed(2)}</td>
-            <td>${emotional.toFixed(2)}</td>
-            <td>${spiritual.toFixed(2)}</td>
-          </tr>
-        `;
-        document.getElementById('dataTable').insertAdjacentHTML('beforeend', dataRow);
-
-        // Update Chart
-        engagementChart.data.labels.push(time);
-        engagementChart.data.datasets[0].data.push(physical);
-        engagementChart.data.datasets[1].data.push(mental);
-        engagementChart.data.datasets[2].data.push(emotional);
-        engagementChart.data.datasets[3].data.push(spiritual);
-
-        if (engagementChart.data.labels.length > 20) {
-          engagementChart.data.labels.shift();
-          engagementChart.data
+  </script>
+</body>
+</html>
