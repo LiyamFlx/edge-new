@@ -3,53 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngageSense - Record or Upload</title>
+    <title>EngageSense</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background: linear-gradient(120deg, #1e1e2f, #2c2c44);
             color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
 
         .container {
-            text-align: center;
-            width: 90%;
-            max-width: 800px;
-            background: #2c2c44;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 28px;
+            text-align: center;
             margin-bottom: 10px;
         }
 
         p {
             font-size: 16px;
-            margin-bottom: 20px;
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         .section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
 
         button {
-            margin: 10px;
             padding: 10px 20px;
-            font-size: 14px;
+            font-size: 16px;
             background-color: #00aaff;
             color: white;
             border: none;
@@ -63,182 +69,162 @@
         }
 
         input[type="file"] {
-            margin: 10px 0;
+            display: block;
+            margin: 20px auto;
         }
 
         canvas {
-            width: 100%;
-            height: 150px;
-            margin-top: 20px;
-            border-radius: 10px;
-            background: #ffffff;
+            display: block;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .progress-bar {
-            margin-top: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
+            width: 80%;
+            height: 10px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             overflow: hidden;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
         }
 
         .progress-bar-inner {
-            height: 10px;
-            background-color: #00aaff;
+            height: 100%;
+            background: #00aaff;
             width: 0;
             transition: width 0.3s ease;
         }
 
-        .navigation-arrows {
+        .navigation {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             margin: 20px 0;
         }
 
-        .arrow {
-            font-size: 20px;
+        .navigation a {
             color: white;
+            font-size: 16px;
+            text-decoration: none;
             background: #007acc;
             padding: 10px 20px;
             border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background 0.3s ease;
         }
 
-        .arrow:hover {
-            background-color: #005f99;
+        .navigation a:hover {
+            background: #005f99;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upload or Record Your Track</h1>
-        <p>Choose to upload a pre-recorded track or record live audio with real-time visualization.</p>
+        <h1>EngageSense</h1>
+        <p>Test the energy and pulse of your audience with real-time analysis and insights.</p>
 
         <!-- Upload Section -->
         <div class="section">
-            <h3>Upload Track</h3>
-            <input type="file" id="file-input" accept=".mp3,.mp4">
+            <h2>Upload Track</h2>
+            <input type="file" id="upload-input" accept=".mp3,.mp4">
             <div class="progress-bar">
-                <div class="progress-bar-inner" id="progress-bar-inner"></div>
+                <div class="progress-bar-inner" id="upload-progress"></div>
             </div>
-            <p id="upload-status">No file uploaded yet.</p>
-            <button id="analyze-file" onclick="analyzeFile()" disabled>Analyze File</button>
+            <button id="analyze-upload-btn" disabled>Analyze Upload</button>
         </div>
 
         <!-- Record Section -->
         <div class="section">
-            <h3>Record Track</h3>
-            <p>Real-time audio waveform visualization.</p>
-            <button id="start-recording">Start Recording</button>
-            <button id="stop-recording" disabled>Stop Recording</button>
-            <button id="analyze-record" onclick="analyzeRecording()" disabled>Analyze Record</button>
-            <canvas id="waveform"></canvas>
+            <h2>Record Audio</h2>
+            <div class="buttons">
+                <button id="start-record-btn">Start Recording</button>
+                <button id="stop-record-btn" disabled>Stop Recording</button>
+            </div>
+            <canvas id="record-waveform" width="600" height="200"></canvas>
+            <button id="analyze-record-btn" disabled>Analyze Recording</button>
         </div>
 
-        <div class="navigation-arrows">
-            <div class="arrow" onclick="navigate('back')">← Back</div>
-            <div class="arrow" onclick="navigate('next')">Next →</div>
+        <!-- Navigation -->
+        <div class="navigation">
+            <a href="#previous">← Back</a>
+            <a href="#next">Next →</a>
         </div>
     </div>
 
     <script>
-        // Navigation Functionality
-        function navigate(direction) {
-            if (direction === 'back') {
-                alert('Navigate to the previous screen.');
-            } else if (direction === 'next') {
-                alert('Navigate to the next screen.');
-            }
-        }
-
         // File Upload Functionality
-        document.getElementById('file-input').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            const progressBar = document.getElementById('progress-bar-inner');
-            const uploadStatus = document.getElementById('upload-status');
-            const analyzeButton = document.getElementById('analyze-file');
+        const uploadInput = document.getElementById('upload-input');
+        const uploadProgress = document.getElementById('upload-progress');
+        const analyzeUploadBtn = document.getElementById('analyze-upload-btn');
+
+        uploadInput.addEventListener('change', () => {
+            const file = uploadInput.files[0];
             if (file) {
-                uploadStatus.textContent = `Uploading ${file.name}...`;
                 let progress = 0;
                 const interval = setInterval(() => {
                     progress += 10;
-                    progressBar.style.width = `${progress}%`;
-                    if (progress === 100) {
+                    uploadProgress.style.width = progress + '%';
+                    if (progress >= 100) {
                         clearInterval(interval);
-                        uploadStatus.textContent = `${file.name} uploaded successfully.`;
-                        analyzeButton.disabled = false;
+                        analyzeUploadBtn.disabled = false;
                     }
                 }, 300);
             }
         });
 
-        function analyzeFile() {
+        analyzeUploadBtn.addEventListener('click', () => {
             alert('Analyzing uploaded file...');
-        }
-
-        // Recording Functionality
-        const startButton = document.getElementById('start-recording');
-        const stopButton = document.getElementById('stop-recording');
-        const analyzeRecordButton = document.getElementById('analyze-record');
-        const canvas = document.getElementById('waveform');
-        const canvasContext = canvas.getContext('2d');
-        let audioContext;
-        let analyser;
-        let dataArray;
-        let bufferLength;
-        let mediaRecorder;
-        let audioStream;
-
-        startButton.addEventListener('click', async () => {
-            try {
-                // Access the microphone
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                const source = audioContext.createMediaStreamSource(audioStream);
-                source.connect(analyser);
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-
-                // Start MediaRecorder
-                mediaRecorder = new MediaRecorder(audioStream);
-                mediaRecorder.start();
-
-                startButton.disabled = true;
-                stopButton.disabled = false;
-
-                // Visualize waveform
-                visualizeWaveform();
-            } catch (err) {
-                alert('Error accessing microphone: ' + err.message);
-            }
         });
 
-        stopButton.addEventListener('click', () => {
-            // Stop recording
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
+        // Recording Section
+        const startRecordBtn = document.getElementById('start-record-btn');
+        const stopRecordBtn = document.getElementById('stop-record-btn');
+        const analyzeRecordBtn = document.getElementById('analyze-record-btn');
+        const canvas = document.getElementById('record-waveform');
+        const canvasContext = canvas.getContext('2d');
+
+        let audioContext, analyser, dataArray, bufferLength, mediaRecorder, audioStream;
+
+        startRecordBtn.addEventListener('click', async () => {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(audioStream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            mediaRecorder = new MediaRecorder(audioStream);
+            mediaRecorder.start();
+
+            startRecordBtn.disabled = true;
+            stopRecordBtn.disabled = false;
+
+            visualize();
+        });
+
+        stopRecordBtn.addEventListener('click', () => {
+            if (mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
                 audioStream.getTracks().forEach(track => track.stop());
-                startButton.disabled = false;
-                stopButton.disabled = true;
-                analyzeRecordButton.disabled = false;
-                cancelAnimationFrame(visualizeWaveform);
+                startRecordBtn.disabled = false;
+                stopRecordBtn.disabled = true;
+                analyzeRecordBtn.disabled = false;
             }
         });
 
-        function analyzeRecording() {
+        analyzeRecordBtn.addEventListener('click', () => {
             alert('Analyzing recorded audio...');
-        }
+        });
 
-        // Visualize the audio waveform
-        function visualizeWaveform() {
+        function visualize() {
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
             analyser.getByteTimeDomainData(dataArray);
 
             canvasContext.lineWidth = 2;
-            canvasContext.strokeStyle = '#007acc';
+            canvasContext.strokeStyle = '#00aaff';
             canvasContext.beginPath();
 
             const sliceWidth = canvas.width / bufferLength;
@@ -247,20 +233,18 @@
             for (let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
                 const y = (v * canvas.height) / 2;
-
                 if (i === 0) {
                     canvasContext.moveTo(x, y);
                 } else {
                     canvasContext.lineTo(x, y);
                 }
-
                 x += sliceWidth;
             }
 
             canvasContext.lineTo(canvas.width, canvas.height / 2);
             canvasContext.stroke();
 
-            requestAnimationFrame(visualizeWaveform);
+            requestAnimationFrame(visualize);
         }
     </script>
 </body>
