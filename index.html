@@ -16,35 +16,26 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
+            display: none;
+        }
+
+        .container.active {
+            display: block;
         }
 
         h1 {
             font-size: 28px;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         p {
             font-size: 16px;
             text-align: center;
             margin-bottom: 30px;
-        }
-
-        .section {
-            margin-bottom: 40px;
-            padding: 20px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .section h2 {
-            font-size: 22px;
-            margin-bottom: 15px;
-            text-align: center;
         }
 
         .buttons {
@@ -68,19 +59,6 @@
             background-color: #007acc;
         }
 
-        input[type="file"] {
-            display: block;
-            margin: 20px auto;
-        }
-
-        canvas {
-            display: block;
-            margin: 20px auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
         .progress-bar {
             width: 80%;
             height: 10px;
@@ -88,7 +66,6 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             overflow: hidden;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
         }
 
         .progress-bar-inner {
@@ -98,34 +75,39 @@
             transition: width 0.3s ease;
         }
 
+        canvas {
+            display: block;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+        }
+
         .navigation {
             display: flex;
             justify-content: space-between;
-            margin: 20px 0;
+            margin: 30px 0;
         }
 
-        .navigation a {
-            color: white;
-            font-size: 16px;
-            text-decoration: none;
+        .navigation button {
             background: #007acc;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: background 0.3s ease;
-        }
-
-        .navigation a:hover {
-            background: #005f99;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>EngageSense</h1>
-        <p>Test the energy and pulse of your audience with real-time analysis and insights.</p>
+    <!-- Welcome Screen -->
+    <div class="container active" id="welcome-screen">
+        <h1>Welcome to EngageSense</h1>
+        <p>Analyze and understand your audience’s engagement in real time.</p>
+        <div class="buttons">
+            <button onclick="navigate('upload-record-screen')">Get Started</button>
+        </div>
+    </div>
 
-        <!-- Upload Section -->
-        <div class="section">
+    <!-- Upload/Record Screen -->
+    <div class="container" id="upload-record-screen">
+        <h1>Upload or Record Audio</h1>
+        <p>Upload an audio file or record live with real-time visualization.</p>
+        <div>
             <h2>Upload Track</h2>
             <input type="file" id="upload-input" accept=".mp3,.mp4">
             <div class="progress-bar">
@@ -133,9 +115,7 @@
             </div>
             <button id="analyze-upload-btn" disabled>Analyze Upload</button>
         </div>
-
-        <!-- Record Section -->
-        <div class="section">
+        <div>
             <h2>Record Audio</h2>
             <div class="buttons">
                 <button id="start-record-btn">Start Recording</button>
@@ -144,16 +124,52 @@
             <canvas id="record-waveform" width="600" height="200"></canvas>
             <button id="analyze-record-btn" disabled>Analyze Recording</button>
         </div>
-
-        <!-- Navigation -->
         <div class="navigation">
-            <a href="#previous">← Back</a>
-            <a href="#next">Next →</a>
+            <button onclick="navigate('welcome-screen')">← Back</button>
+            <button onclick="navigate('analysis-screen')">Next →</button>
+        </div>
+    </div>
+
+    <!-- Real-Time Analysis Screen -->
+    <div class="container" id="analysis-screen">
+        <h1>Real-Time Analysis</h1>
+        <canvas id="real-time-chart" width="600" height="300"></canvas>
+        <div class="navigation">
+            <button onclick="navigate('upload-record-screen')">← Back</button>
+            <button onclick="navigate('results-screen')">Next →</button>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="container" id="results-screen">
+        <h1>Results Summary</h1>
+        <p>Your engagement metrics are ready!</p>
+        <button onclick="exportResults()">Export Results</button>
+        <div class="navigation">
+            <button onclick="navigate('analysis-screen')">← Back</button>
+            <button onclick="navigate('thank-you-screen')">Next →</button>
+        </div>
+    </div>
+
+    <!-- Thank You Screen -->
+    <div class="container" id="thank-you-screen">
+        <h1>Thank You!</h1>
+        <p>Your analysis is complete. Start again to analyze more data.</p>
+        <div class="buttons">
+            <button onclick="navigate('welcome-screen')">Start Over</button>
         </div>
     </div>
 
     <script>
-        // File Upload Functionality
+        // Navigation between screens
+        function navigate(screenId) {
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Upload File Functionality
         const uploadInput = document.getElementById('upload-input');
         const uploadProgress = document.getElementById('upload-progress');
         const analyzeUploadBtn = document.getElementById('analyze-upload-btn');
@@ -177,7 +193,7 @@
             alert('Analyzing uploaded file...');
         });
 
-        // Recording Section
+        // Recording Functionality
         const startRecordBtn = document.getElementById('start-record-btn');
         const stopRecordBtn = document.getElementById('stop-record-btn');
         const analyzeRecordBtn = document.getElementById('analyze-record-btn');
@@ -202,7 +218,7 @@
             startRecordBtn.disabled = true;
             stopRecordBtn.disabled = false;
 
-            visualize();
+            visualizeWaveform();
         });
 
         stopRecordBtn.addEventListener('click', () => {
@@ -219,7 +235,7 @@
             alert('Analyzing recorded audio...');
         });
 
-        function visualize() {
+        function visualizeWaveform() {
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
             analyser.getByteTimeDomainData(dataArray);
 
@@ -233,18 +249,37 @@
             for (let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
                 const y = (v * canvas.height) / 2;
+
                 if (i === 0) {
                     canvasContext.moveTo(x, y);
                 } else {
                     canvasContext.lineTo(x, y);
                 }
+
                 x += sliceWidth;
             }
 
             canvasContext.lineTo(canvas.width, canvas.height / 2);
             canvasContext.stroke();
 
-            requestAnimationFrame(visualize);
+            requestAnimationFrame(visualizeWaveform);
+        }
+
+        // Real-Time Analysis Chart
+        const realTimeChart = new Chart(document.getElementById('real-time-chart'), {
+            type: 'line',
+            data: {
+                labels: ['Physical', 'Emotional', 'Mental', 'Spiritual'],
+                datasets: [
+                    { label: 'Engagement', data: [8, 7, 6, 9], borderColor: '#00aaff' }
+                ]
+            },
+            options: { responsive: true }
+        });
+
+        // Export Results Functionality
+        function exportResults() {
+            alert('Results exported successfully!');
         }
     </script>
 </body>
