@@ -113,7 +113,7 @@
             <div class="progress-bar">
                 <div class="progress-bar-inner" id="upload-progress"></div>
             </div>
-            <button id="analyze-upload-btn" disabled>Analyze Upload</button>
+            <button id="analyze-upload-btn" disabled onclick="analyzeUpload()">Analyze Upload</button>
         </div>
         <div>
             <h2>Record Audio</h2>
@@ -122,7 +122,7 @@
                 <button id="stop-record-btn" disabled>Stop Recording</button>
             </div>
             <canvas id="record-waveform" width="600" height="200"></canvas>
-            <button id="analyze-record-btn" disabled>Analyze Recording</button>
+            <button id="analyze-record-btn" disabled onclick="analyzeRecording()">Analyze Recording</button>
         </div>
         <div class="navigation">
             <button onclick="navigate('welcome-screen')">← Back</button>
@@ -143,8 +143,10 @@
     <!-- Results Screen -->
     <div class="container" id="results-screen">
         <h1>Results Summary</h1>
-        <p>Your engagement metrics are ready!</p>
-        <button onclick="exportResults()">Export Results</button>
+        <div>
+            <h3>Engagement Insights</h3>
+            <ul id="results-list"></ul>
+        </div>
         <div class="navigation">
             <button onclick="navigate('analysis-screen')">← Back</button>
             <button onclick="navigate('thank-you-screen')">Next →</button>
@@ -189,9 +191,16 @@
             }
         });
 
-        analyzeUploadBtn.addEventListener('click', () => {
-            alert('Analyzing uploaded file...');
-        });
+        // Analyze Upload Function
+        function analyzeUpload() {
+            const results = [
+                "Physical engagement: 85%",
+                "Emotional engagement: 78%",
+                "Mental engagement: 92%",
+                "Spiritual engagement: 67%"
+            ];
+            displayResults(results);
+        }
 
         // Recording Functionality
         const startRecordBtn = document.getElementById('start-record-btn');
@@ -231,10 +240,18 @@
             }
         });
 
-        analyzeRecordBtn.addEventListener('click', () => {
-            alert('Analyzing recorded audio...');
-        });
+        // Analyze Recording Function
+        function analyzeRecording() {
+            const results = [
+                "Physical engagement: 90%",
+                "Emotional engagement: 82%",
+                "Mental engagement: 88%",
+                "Spiritual engagement: 73%"
+            ];
+            displayResults(results);
+        }
 
+        // Visualize Waveform
         function visualizeWaveform() {
             canvasContext.clearRect(0, 0, canvas.width, canvas.height);
             analyser.getByteTimeDomainData(dataArray);
@@ -265,21 +282,16 @@
             requestAnimationFrame(visualizeWaveform);
         }
 
-        // Real-Time Analysis Chart
-        const realTimeChart = new Chart(document.getElementById('real-time-chart'), {
-            type: 'line',
-            data: {
-                labels: ['Physical', 'Emotional', 'Mental', 'Spiritual'],
-                datasets: [
-                    { label: 'Engagement', data: [8, 7, 6, 9], borderColor: '#00aaff' }
-                ]
-            },
-            options: { responsive: true }
-        });
-
-        // Export Results Functionality
-        function exportResults() {
-            alert('Results exported successfully!');
+        // Display Results on Results Page
+        function displayResults(results) {
+            const resultsList = document.getElementById('results-list');
+            resultsList.innerHTML = '';
+            results.forEach(result => {
+                const li = document.createElement('li');
+                li.textContent = result;
+                resultsList.appendChild(li);
+            });
+            navigate('results-screen');
         }
     </script>
 </body>
