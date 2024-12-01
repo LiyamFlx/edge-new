@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngageSense Player</title>
+    <title>EngageSense</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* General Styles */
         body {
@@ -12,7 +13,6 @@
             padding: 0;
             background: linear-gradient(120deg, #1e1e2f, #2c2c44);
             color: #ffffff;
-            overflow: hidden;
         }
 
         .screen {
@@ -20,7 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             text-align: center;
             padding: 20px;
         }
@@ -30,8 +30,8 @@
         }
 
         button {
-            margin: 20px;
-            padding: 10px 30px;
+            margin: 10px;
+            padding: 10px 20px;
             font-size: 16px;
             background-color: #00aaff;
             color: white;
@@ -43,6 +43,15 @@
 
         button:hover {
             background-color: #007acc;
+        }
+
+        h1, h2 {
+            margin: 20px 0;
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 20px;
         }
 
         .navigation-arrows {
@@ -60,103 +69,54 @@
             color: white;
         }
 
-        /* Welcome Screen */
-        #welcome-screen {
-            background: linear-gradient(120deg, #2a2a47, #1c1c33);
+        canvas {
+            max-width: 100%;
         }
 
-        #welcome-screen h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
+        .chart-container {
+            width: 80%;
+            margin: 20px 0;
         }
 
-        #welcome-screen p {
-            font-size: 18px;
-            margin-bottom: 30px;
-        }
-
-        .energy-visual {
-            width: 200px;
-            height: 200px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            background: radial-gradient(circle, #ff616f, #ff9e7c, #ffa47f);
-            box-shadow: 0 0 20px rgba(255, 99, 143, 0.7);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        /* Upload and Record Track */
-        #upload-record-screen {
+        .charts-row {
             display: flex;
-            flex-direction: column;
-            text-align: left;
+            justify-content: space-around;
+            gap: 10px;
+            width: 100%;
         }
 
-        .upload-record-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
+        .small-chart {
+            width: 150px;
+            height: 100px;
         }
 
-        .upload-pane, .record-pane {
-            flex: 1;
+        .upload-section, .record-section {
+            margin: 20px 0;
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .progress-bar {
+            margin-top: 10px;
             background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
         }
 
-        .upload-pane input {
-            display: block;
-            margin: 10px 0;
+        .progress-bar-inner {
+            height: 10px;
+            background-color: #00aaff;
+            width: 0;
+            transition: width 0.3s ease;
         }
 
-        .record-controls button {
-            margin: 5px;
-        }
-
-        /* Real-Time Data Screen */
-        #real-time-screen {
-            text-align: center;
-        }
-
-        .graphs-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .graph {
-            width: 250px;
-            height: 150px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 10px;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .graph-main {
-            width: 100%;
-            max-width: 800px;
-            height: 300px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
+        .bar-chart {
+            width: 80%;
+            margin: 30px auto;
         }
     </style>
 </head>
@@ -164,90 +124,188 @@
     <div id="app">
         <!-- Welcome Screen -->
         <div class="screen active" id="welcome-screen">
-            <h1>Welcome to EngageSense Player</h1>
-            <p>Test the energy and the pulse of your audience</p>
-            <div class="energy-visual"></div>
+            <h1>Welcome to EngageSense</h1>
+            <p>Test the energy and pulse of your audience in real-time.</p>
             <button onclick="navigate('upload-record-screen')">Get Started</button>
         </div>
 
-        <!-- Upload and Record Track Screen -->
+        <!-- Upload or Record Track Screen -->
         <div class="screen" id="upload-record-screen">
             <h1>Upload or Record Your Track</h1>
             <p>Choose to upload a pre-recorded track or record live audio with real-time visualization.</p>
-            <div class="upload-record-container">
-                <!-- Upload Pane -->
-                <div class="upload-pane">
-                    <h3>Upload Track</h3>
-                    <p>Drag and drop your files here</p>
-                    <input type="file" id="file-input" accept=".mp3,.mp4">
-                    <div id="progress">No file uploaded yet</div>
+            <div class="upload-section">
+                <h3>Upload Track</h3>
+                <input type="file" id="file-input" accept=".mp3,.mp4">
+                <div class="progress-bar">
+                    <div class="progress-bar-inner" id="progress-bar-inner"></div>
                 </div>
-
-                <!-- Record Pane -->
-                <div class="record-pane">
-                    <h3>Record Track</h3>
-                    <div id="waveform">Waveform visualization</div>
-                    <div class="record-controls">
-                        <button onclick="startRecording()">Start</button>
-                        <button onclick="stopRecording()" disabled>Stop</button>
-                        <button onclick="rewindRecording()">Rewind</button>
-                    </div>
-                </div>
+                <p id="upload-status">No file uploaded yet.</p>
+            </div>
+            <div class="record-section">
+                <h3>Record Track</h3>
+                <p>Real-time audio waveform visualization.</p>
+                <button onclick="startRecording()">Start Recording</button>
+                <button onclick="stopRecording()">Stop Recording</button>
             </div>
             <div class="navigation-arrows">
                 <span class="arrow" onclick="navigate('welcome-screen')">←</span>
-                <span class="arrow" onclick="navigate('real-time-screen')">→</span>
+                <span class="arrow" onclick="navigate('live-recording-screen')">→</span>
             </div>
         </div>
 
-        <!-- Real-Time Data Screen -->
-        <div class="screen" id="real-time-screen">
-            <h1>Real-Time Data</h1>
-            <div class="graph-main">Main Real-Time Graph</div>
-            <div class="graphs-container">
-                <div class="graph">Mental</div>
-                <div class="graph">Spiritual</div>
-                <div class="graph">Emotional</div>
-                <div class="graph">Physical</div>
+        <!-- Live Recording Screen -->
+        <div class="screen" id="live-recording-screen">
+            <h1>Live Recording</h1>
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <div class="charts-row">
+                <canvas id="physicalChart" class="small-chart"></canvas>
+                <canvas id="emotionalChart" class="small-chart"></canvas>
+                <canvas id="mentalChart" class="small-chart"></canvas>
+                <canvas id="spiritualChart" class="small-chart"></canvas>
+            </div>
+            <div>
+                <button onclick="startLiveRecording()">Start</button>
+                <button onclick="stopLiveRecording()">Stop</button>
+                <button onclick="pauseLiveRecording()">Pause</button>
+                <button onclick="rewindLiveRecording()">Rewind</button>
             </div>
             <div class="navigation-arrows">
                 <span class="arrow" onclick="navigate('upload-record-screen')">←</span>
+                <span class="arrow" onclick="navigate('view-results-screen')">→</span>
+            </div>
+        </div>
+
+        <!-- View Engagement Results Screen -->
+        <div class="screen" id="view-results-screen">
+            <h1>View Engagement Results</h1>
+            <div class="bar-chart">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            <div>
+                <button onclick="downloadResults()">Download Results</button>
+                <button onclick="viewResults()">View Details</button>
+            </div>
+            <div class="navigation-arrows">
+                <span class="arrow" onclick="navigate('live-recording-screen')">←</span>
                 <span class="arrow" onclick="navigate('welcome-screen')">→</span>
             </div>
         </div>
     </div>
 
     <script>
+        // Navigation Function
         function navigate(screenId) {
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(screen => screen.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        function startRecording() {
-            alert('Recording started...');
-            document.querySelector('.record-controls button:nth-child(2)').disabled = false;
-        }
-
-        function stopRecording() {
-            alert('Recording stopped.');
-            document.querySelector('.record-controls button:nth-child(2)').disabled = true;
-        }
-
-        function rewindRecording() {
-            alert('Rewinding...');
-        }
-
+        // Upload Track Functionality
         document.getElementById('file-input').addEventListener('change', (event) => {
             const file = event.target.files[0];
+            const progressBar = document.getElementById('progress-bar-inner');
+            const uploadStatus = document.getElementById('upload-status');
             if (file) {
-                const progress = document.getElementById('progress');
-                progress.textContent = `Uploading ${file.name}...`;
-                setTimeout(() => {
-                    progress.textContent = 'Upload Complete!';
-                }, 2000);
+                uploadStatus.textContent = `Uploading ${file.name}...`;
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressBar.style.width = `${progress}%`;
+                    if (progress === 100) {
+                        clearInterval(interval);
+                        uploadStatus.textContent = `${file.name} uploaded successfully.`;
+                    }
+                }, 300);
             }
         });
+
+        // Live Recording Functionality
+        let liveDataInterval;
+        const engagementData = {
+            physical: [],
+            emotional: [],
+            mental: [],
+            spiritual: [],
+        };
+
+        const mainChart = new Chart(document.getElementById('mainChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Physical', data: [], borderColor: '#FF6384', fill: false },
+                    { label: 'Emotional', data: [], borderColor: '#36A2EB', fill: false },
+                    { label: 'Mental', data: [], borderColor: '#FFCE56', fill: false },
+                    { label: 'Spiritual', data: [], borderColor: '#4BC0C0', fill: false },
+                ],
+            },
+            options: { responsive: true },
+        });
+
+        function startLiveRecording() {
+            liveDataInterval = setInterval(() => {
+                const time = new Date().toLocaleTimeString();
+                const newData = {
+                    physical: Math.random() * 10,
+                    emotional: Math.random() * 10,
+                    mental: Math.random() * 10,
+                    spiritual: Math.random() * 10,
+                };
+
+                Object.keys(newData).forEach((key, idx) => {
+                    engagementData[key].push(newData[key]);
+                    if (engagementData[key].length > 10) engagementData[key].shift();
+                });
+
+                mainChart.data.labels.push(time);
+                if (mainChart.data.labels.length > 10) mainChart.data.labels.shift();
+
+                mainChart.data.datasets.forEach((dataset, idx) => {
+                    dataset.data = engagementData[Object.keys(newData)[idx]];
+                });
+
+                mainChart.update();
+            }, 1000);
+        }
+
+        function stopLiveRecording() {
+            clearInterval(liveDataInterval);
+        }
+
+        function pauseLiveRecording() {
+            clearInterval(liveDataInterval);
+        }
+
+        function rewindLiveRecording() {
+            mainChart.data.labels = [];
+            mainChart.data.datasets.forEach(dataset => (dataset.data = []));
+            mainChart.update();
+        }
+
+        // Engagement Results Chart
+        const resultsChart = new Chart(document.getElementById('resultsChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Physical', 'Emotional', 'Mental', 'Spiritual'],
+                datasets: [
+                    {
+                        label: 'Engagement Scores',
+                        data: [8, 7, 6, 9],
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
+                    },
+                ],
+            },
+            options: { responsive: true },
+        });
+
+        function downloadResults() {
+            alert('Results downloaded!');
+        }
+
+        function viewResults() {
+            alert('Viewing detailed results.');
+        }
     </script>
 </body>
 </html>
