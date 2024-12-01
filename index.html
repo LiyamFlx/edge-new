@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngageSense - Results</title>
+    <title>EngageSense</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* General Styles */
@@ -64,11 +64,100 @@
         .navigation button:hover {
             background-color: #005f99;
         }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00aaff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #007acc;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .progress-bar {
+            width: 80%;
+            height: 10px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: #00aaff;
+            width: 0;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
+    <!-- Welcome Screen -->
+    <div class="container active" id="welcome-screen">
+        <h1>Welcome to EngageSense</h1>
+        <p>Analyze and understand your audience’s engagement in real time.</p>
+        <div class="buttons" style="text-align: center;">
+            <button onclick="navigate('upload-record-screen')">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Upload/Record Audio Screen -->
+    <div class="container" id="upload-record-screen">
+        <h1>Upload or Record Audio</h1>
+        <p>Upload an audio file or record live with real-time visualization.</p>
+        <div>
+            <h2>Upload Track</h2>
+            <input type="file" id="upload-input" accept=".mp3,.mp4">
+            <div class="progress-bar">
+                <div class="progress-bar-inner" id="upload-progress"></div>
+            </div>
+            <button id="analyze-upload-btn" disabled onclick="analyzeUpload()">Analyze Upload</button>
+        </div>
+        <div>
+            <h2>Record Audio</h2>
+            <div class="buttons">
+                <button id="start-record-btn">Start Recording</button>
+                <button id="stop-record-btn" disabled>Stop Recording</button>
+            </div>
+            <canvas id="record-waveform" width="600" height="200"></canvas>
+            <button id="analyze-record-btn" disabled onclick="analyzeRecording()">Analyze Recording</button>
+        </div>
+        <div class="navigation">
+            <button onclick="navigate('welcome-screen')">← Back</button>
+            <button onclick="navigate('analysis-screen')">Next →</button>
+        </div>
+    </div>
+
+    <!-- Real-Time Analysis Screen -->
+    <div class="container" id="analysis-screen">
+        <h1>Real-Time Analysis</h1>
+        <canvas id="real-time-chart" width="600" height="300"></canvas>
+        <div class="navigation">
+            <button onclick="navigate('upload-record-screen')">← Back</button>
+            <button onclick="navigate('results-screen')">Next →</button>
+        </div>
+    </div>
+
     <!-- Results Screen -->
-    <div class="container active" id="results-screen">
+    <div class="container" id="results-screen">
         <h1>Results Summary</h1>
         <div class="chart-container">
             <canvas id="results-chart"></canvas>
@@ -91,7 +180,7 @@
     </div>
 
     <script>
-        // Navigate between screens
+        // Navigation between screens
         function navigate(screenId) {
             document.querySelectorAll('.container').forEach(container => {
                 container.classList.remove('active');
@@ -99,12 +188,131 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // Display Results on Results Page with Chart
+        // Upload File Functionality
+        const uploadInput = document.getElementById('upload-input');
+        const uploadProgress = document.getElementById('upload-progress');
+        const analyzeUploadBtn = document.getElementById('analyze-upload-btn');
+
+        uploadInput.addEventListener('change', () => {
+            const file = uploadInput.files[0];
+            if (file) {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    uploadProgress.style.width = progress + '%';
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        analyzeUploadBtn.disabled = false;
+                    }
+                }, 300);
+            }
+        });
+
+        function analyzeUpload() {
+            alert("Analyzing uploaded audio...");
+        }
+
+        // Recording Functionality
+        const startRecordBtn = document.getElementById('start-record-btn');
+        const stopRecordBtn = document.getElementById('stop-record-btn');
+        const analyzeRecordBtn = document.getElementById('analyze-record-btn');
+        const canvas = document.getElementById('record-waveform');
+        const canvasContext = canvas.getContext('2d');
+
+        let audioContext, analyser, dataArray, bufferLength, mediaRecorder, audioStream;
+
+        startRecordBtn.addEventListener('click', async () => {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(audioStream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            mediaRecorder = new MediaRecorder(audioStream);
+            mediaRecorder.start();
+
+            startRecordBtn.disabled = true;
+            stopRecordBtn.disabled = false;
+
+            visualizeWaveform();
+        });
+
+        stopRecordBtn.addEventListener('click', () => {
+            if (mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                audioStream.getTracks().forEach(track => track.stop());
+                startRecordBtn.disabled = false;
+                stopRecordBtn.disabled = true;
+                analyzeRecordBtn.disabled = false;
+            }
+        });
+
+        function analyzeRecording() {
+            alert("Analyzing recorded audio...");
+        }
+
+        function visualizeWaveform() {
+            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+            analyser.getByteTimeDomainData(dataArray);
+
+            canvasContext.lineWidth = 2;
+            canvasContext.strokeStyle = '#00aaff';
+            canvasContext.beginPath();
+
+            const sliceWidth = canvas.width / bufferLength;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * canvas.height) / 2;
+
+                if (i === 0) {
+                    canvasContext.moveTo(x, y);
+                } else {
+                    canvasContext.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            canvasContext.lineTo(canvas.width, canvas.height / 2);
+            canvasContext.stroke();
+
+            requestAnimationFrame(visualizeWaveform);
+        }
+
+        // Real-Time Chart (placeholder for data)
+        const realTimeChart = new Chart(document.getElementById('real-time-chart'), {
+            type: 'line',
+            data: {
+                labels: ['0s', '1s', '2s', '3s', '4s', '5s'],
+                datasets: [
+                    {
+                        label: 'Engagement',
+                        data: [10, 20, 50, 30, 40, 60],
+                        borderColor: '#00aaff',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true },
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Results Chart
         const resultsData = {
             labels: ['Physical', 'Emotional', 'Mental', 'Spiritual'],
             datasets: [{
                 label: 'Engagement Level (%)',
-                data: [85, 78, 92, 67], // Example values
+                data: [85, 78, 92, 67],
                 backgroundColor: [
                     'rgba(0, 123, 255, 0.6)',
                     'rgba(220, 53, 69, 0.6)',
@@ -124,56 +332,18 @@
         const resultsOptions = {
             responsive: true,
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    enabled: true
-                }
+                legend: { display: true, position: 'top' }
             },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        color: '#ffffff'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    }
-                },
-                x: {
-                    ticks: {
-                        color: '#ffffff'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    }
-                }
+                y: { beginAtZero: true, max: 100 },
+                x: {}
             }
         };
 
-        const ctx = document.getElementById('results-chart').getContext('2d');
-        new Chart(ctx, {
+        new Chart(document.getElementById('results-chart'), {
             type: 'bar',
             data: resultsData,
             options: resultsOptions
-        });
-
-        // Display numeric results in a list
-        const resultsList = document.getElementById('results-list');
-        const numericResults = [
-            "Physical engagement: 85%",
-            "Emotional engagement: 78%",
-            "Mental engagement: 92%",
-            "Spiritual engagement: 67%"
-        ];
-
-        numericResults.forEach(result => {
-            const li = document.createElement('li');
-            li.textContent = result;
-            resultsList.appendChild(li);
         });
     </script>
 </body>
