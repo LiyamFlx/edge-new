@@ -20,8 +20,8 @@
 
         .container {
             text-align: center;
-            width: 80%;
-            max-width: 600px;
+            width: 90%;
+            max-width: 800px;
             background: #2c2c44;
             padding: 20px;
             border-radius: 10px;
@@ -87,6 +87,27 @@
             width: 0;
             transition: width 0.3s ease;
         }
+
+        .navigation-arrows {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .arrow {
+            font-size: 20px;
+            color: white;
+            background: #007acc;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .arrow:hover {
+            background-color: #005f99;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +123,7 @@
                 <div class="progress-bar-inner" id="progress-bar-inner"></div>
             </div>
             <p id="upload-status">No file uploaded yet.</p>
+            <button id="analyze-file" onclick="analyzeFile()" disabled>Analyze File</button>
         </div>
 
         <!-- Record Section -->
@@ -110,16 +132,32 @@
             <p>Real-time audio waveform visualization.</p>
             <button id="start-recording">Start Recording</button>
             <button id="stop-recording" disabled>Stop Recording</button>
+            <button id="analyze-record" onclick="analyzeRecording()" disabled>Analyze Record</button>
             <canvas id="waveform"></canvas>
+        </div>
+
+        <div class="navigation-arrows">
+            <div class="arrow" onclick="navigate('back')">← Back</div>
+            <div class="arrow" onclick="navigate('next')">Next →</div>
         </div>
     </div>
 
     <script>
+        // Navigation Functionality
+        function navigate(direction) {
+            if (direction === 'back') {
+                alert('Navigate to the previous screen.');
+            } else if (direction === 'next') {
+                alert('Navigate to the next screen.');
+            }
+        }
+
         // File Upload Functionality
         document.getElementById('file-input').addEventListener('change', (event) => {
             const file = event.target.files[0];
             const progressBar = document.getElementById('progress-bar-inner');
             const uploadStatus = document.getElementById('upload-status');
+            const analyzeButton = document.getElementById('analyze-file');
             if (file) {
                 uploadStatus.textContent = `Uploading ${file.name}...`;
                 let progress = 0;
@@ -129,14 +167,20 @@
                     if (progress === 100) {
                         clearInterval(interval);
                         uploadStatus.textContent = `${file.name} uploaded successfully.`;
+                        analyzeButton.disabled = false;
                     }
                 }, 300);
             }
         });
 
+        function analyzeFile() {
+            alert('Analyzing uploaded file...');
+        }
+
         // Recording Functionality
         const startButton = document.getElementById('start-recording');
         const stopButton = document.getElementById('stop-recording');
+        const analyzeRecordButton = document.getElementById('analyze-record');
         const canvas = document.getElementById('waveform');
         const canvasContext = canvas.getContext('2d');
         let audioContext;
@@ -179,9 +223,14 @@
                 audioStream.getTracks().forEach(track => track.stop());
                 startButton.disabled = false;
                 stopButton.disabled = true;
+                analyzeRecordButton.disabled = false;
                 cancelAnimationFrame(visualizeWaveform);
             }
         });
+
+        function analyzeRecording() {
+            alert('Analyzing recorded audio...');
+        }
 
         // Visualize the audio waveform
         function visualizeWaveform() {
