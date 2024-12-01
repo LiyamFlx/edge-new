@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EngageSense Player</title>
     <style>
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background: linear-gradient(120deg, #1e1e2f, #2c2c44);
+            color: #ffffff;
+            overflow: hidden;
         }
 
         .screen {
@@ -18,8 +21,8 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            padding: 20px;
             text-align: center;
+            padding: 20px;
         }
 
         .screen.active {
@@ -27,37 +30,133 @@
         }
 
         button {
-            margin: 10px;
-            padding: 10px 20px;
-            background-color: #007bff;
+            margin: 20px;
+            padding: 10px 30px;
+            font-size: 16px;
+            background-color: #00aaff;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
-        .chart-bar {
+        button:hover {
+            background-color: #007acc;
+        }
+
+        .navigation-arrows {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .arrow {
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            background: linear-gradient(120deg, #2a2a47, #1c1c33);
+        }
+
+        #welcome-screen h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        #welcome-screen p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .energy-visual {
+            width: 200px;
+            height: 200px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff616f, #ff9e7c, #ffa47f);
+            box-shadow: 0 0 20px rgba(255, 99, 143, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Upload and Record Track */
+        #upload-record-screen {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .upload-record-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .upload-pane, .record-pane {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .upload-pane input {
+            display: block;
             margin: 10px 0;
         }
 
-        .bar {
-            display: inline-block;
-            height: 20px;
-            background-color: #007bff;
+        .record-controls button {
+            margin: 5px;
         }
 
-        #progress {
-            margin-top: 20px;
-            color: green;
+        /* Real-Time Data Screen */
+        #real-time-screen {
+            text-align: center;
         }
 
-        h1 {
-            font-size: 24px;
+        .graphs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .graph {
+            width: 250px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .graph-main {
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
             margin-bottom: 20px;
-        }
-
-        p {
-            font-size: 16px;
-            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
         }
     </style>
 </head>
@@ -66,84 +165,84 @@
         <!-- Welcome Screen -->
         <div class="screen active" id="welcome-screen">
             <h1>Welcome to EngageSense Player</h1>
-            <p>Analyze and measure audience engagement in real-time. Upload audio or stream live.</p>
-            <button onclick="navigate('view-results-screen')">Start</button>
+            <p>Test the energy and the pulse of your audience</p>
+            <div class="energy-visual"></div>
+            <button onclick="navigate('upload-record-screen')">Get Started</button>
         </div>
 
-        <!-- View Engagement Results Screen -->
-        <div class="screen" id="view-results-screen">
-            <h1>View Engagement Results</h1>
-            <div class="chart-container">
-                <div class="chart-bar">Parameter 1: <span class="bar" style="width: 80%;"></span></div>
-                <div class="chart-bar">Parameter 2: <span class="bar" style="width: 60%;"></span></div>
-                <div class="chart-bar">Parameter 3: <span class="bar" style="width: 90%;"></span></div>
-                <div class="chart-bar">Parameter 4: <span class="bar" style="width: 50%;"></span></div>
+        <!-- Upload and Record Track Screen -->
+        <div class="screen" id="upload-record-screen">
+            <h1>Upload or Record Your Track</h1>
+            <p>Choose to upload a pre-recorded track or record live audio with real-time visualization.</p>
+            <div class="upload-record-container">
+                <!-- Upload Pane -->
+                <div class="upload-pane">
+                    <h3>Upload Track</h3>
+                    <p>Drag and drop your files here</p>
+                    <input type="file" id="file-input" accept=".mp3,.mp4">
+                    <div id="progress">No file uploaded yet</div>
+                </div>
+
+                <!-- Record Pane -->
+                <div class="record-pane">
+                    <h3>Record Track</h3>
+                    <div id="waveform">Waveform visualization</div>
+                    <div class="record-controls">
+                        <button onclick="startRecording()">Start</button>
+                        <button onclick="stopRecording()" disabled>Stop</button>
+                        <button onclick="rewindRecording()">Rewind</button>
+                    </div>
+                </div>
             </div>
-            <button onclick="navigate('real-time-screen')">Next</button>
+            <div class="navigation-arrows">
+                <span class="arrow" onclick="navigate('welcome-screen')">←</span>
+                <span class="arrow" onclick="navigate('real-time-screen')">→</span>
+            </div>
         </div>
 
         <!-- Real-Time Data Screen -->
         <div class="screen" id="real-time-screen">
             <h1>Real-Time Data</h1>
-            <div id="real-time-graph">
-                <p>Dynamic graph placeholder</p>
+            <div class="graph-main">Main Real-Time Graph</div>
+            <div class="graphs-container">
+                <div class="graph">Mental</div>
+                <div class="graph">Spiritual</div>
+                <div class="graph">Emotional</div>
+                <div class="graph">Physical</div>
             </div>
-            <button onclick="navigate('dashboard-screen')">Next</button>
-        </div>
-
-        <!-- Engagement Dashboard Results Screen -->
-        <div class="screen" id="dashboard-screen">
-            <h1>Engagement Dashboard Results</h1>
-            <div id="dashboard">
-                <p>Dashboard content placeholder</p>
+            <div class="navigation-arrows">
+                <span class="arrow" onclick="navigate('upload-record-screen')">←</span>
+                <span class="arrow" onclick="navigate('welcome-screen')">→</span>
             </div>
-            <button onclick="navigate('record-track-screen')">Next</button>
-        </div>
-
-        <!-- Record Track Screen -->
-        <div class="screen" id="record-track-screen">
-            <h1>Record Track</h1>
-            <button id="start-record" onclick="startRecording()">Start</button>
-            <button id="stop-record" onclick="stopRecording()" disabled>Stop</button>
-            <button onclick="navigate('upload-track-screen')">Next</button>
-        </div>
-
-        <!-- Upload Track Screen -->
-        <div class="screen" id="upload-track-screen">
-            <h1>Upload Track</h1>
-            <input type="file" id="file-input" accept=".mp3,.mp4">
-            <div id="progress"></div>
-            <button onclick="navigate('welcome-screen')">Finish</button>
         </div>
     </div>
 
     <script>
-        // Navigation function
         function navigate(screenId) {
             const screens = document.querySelectorAll('.screen');
             screens.forEach(screen => screen.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        // Mock recording functionality
         function startRecording() {
-            document.getElementById('start-record').disabled = true;
-            document.getElementById('stop-record').disabled = false;
             alert('Recording started...');
+            document.querySelector('.record-controls button:nth-child(2)').disabled = false;
         }
 
         function stopRecording() {
-            document.getElementById('start-record').disabled = false;
-            document.getElementById('stop-record').disabled = true;
             alert('Recording stopped.');
+            document.querySelector('.record-controls button:nth-child(2)').disabled = true;
         }
 
-        // File upload functionality
+        function rewindRecording() {
+            alert('Rewinding...');
+        }
+
         document.getElementById('file-input').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
                 const progress = document.getElementById('progress');
-                progress.textContent = 'Uploading...';
+                progress.textContent = `Uploading ${file.name}...`;
                 setTimeout(() => {
                     progress.textContent = 'Upload Complete!';
                 }, 2000);
