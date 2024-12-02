@@ -1,66 +1,56 @@
-function startApp() {
-    navigateTo("upload-record-screen");
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EngageSense</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="welcome-screen" class="screen active">
+        <h1>Welcome to EngageSense</h1>
+        <p>Your tool for audience engagement analysis</p>
+        <button class="start-button" onclick="startApp()">Get Started</button>
+    </div>
 
-function navigateTo(screenId) {
-    document.querySelectorAll(".screen").forEach(screen => {
-        screen.classList.remove("active");
-    });
-    document.getElementById(screenId).classList.add("active");
-}
+    <div id="upload-record-screen" class="screen">
+        <h1>Upload or Record Audio</h1>
+        <div class="upload-container">
+            <h2>Upload Track</h2>
+            <input type="file" id="audioUpload" accept="audio/*">
+            <button onclick="analyzeUpload()">Analyze Audio</button>
+        </div>
+        <div class="record-container">
+            <h2>Record Audio</h2>
+            <button id="startRecording" onclick="startRecording()">Start Recording</button>
+            <button id="stopRecording" onclick="stopRecording()" disabled>Stop Recording</button>
+            <button onclick="analyzeRecording()">Analyze Recording</button>
+        </div>
+        <div id="progress-indicator">
+            <p id="progress-text"></p>
+        </div>
+        <div class="navigation-buttons">
+            <button onclick="navigateTo('welcome-screen')">Back</button>
+            <button onclick="navigateTo('results-screen')">Next</button>
+        </div>
+    </div>
 
-function analyzeUpload() {
-    const progressText = document.getElementById("progress-text");
-    progressText.textContent = "Analyzing uploaded file...";
-    setTimeout(() => {
-        progressText.textContent = "Analysis Complete!";
-        navigateTo("results-screen");
-        renderChart();
-    }, 3000);
-}
+    <div id="results-screen" class="screen">
+        <h1>Results Summary</h1>
+        <ul id="engagement-results">
+            <li>Physical Engagement: <span id="physical-engagement">85%</span></li>
+            <li>Emotional Engagement: <span id="emotional-engagement">78%</span></li>
+            <li>Mental Engagement: <span id="mental-engagement">92%</span></li>
+            <li>Spiritual Engagement: <span id="spiritual-engagement">67%</span></li>
+        </ul>
+        <canvas id="engagementChart" width="400" height="200"></canvas>
+        <div class="navigation-buttons">
+            <button onclick="navigateTo('upload-record-screen')">Back</button>
+            <button onclick="navigateTo('welcome-screen')">Start Over</button>
+        </div>
+    </div>
 
-function startRecording() {
-    document.getElementById("startRecording").disabled = true;
-    document.getElementById("stopRecording").disabled = false;
-    document.getElementById("progress-text").textContent = "Recording in progress...";
-}
-
-function stopRecording() {
-    document.getElementById("startRecording").disabled = false;
-    document.getElementById("stopRecording").disabled = true;
-    document.getElementById("progress-text").textContent = "Recording stopped.";
-}
-
-function analyzeRecording() {
-    const progressText = document.getElementById("progress-text");
-    progressText.textContent = "Analyzing recorded audio...";
-    setTimeout(() => {
-        progressText.textContent = "Analysis Complete!";
-        navigateTo("results-screen");
-        renderChart();
-    }, 3000);
-}
-
-function renderChart() {
-    const ctx = document.getElementById("engagementChart").getContext("2d");
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: ["Physical", "Emotional", "Mental", "Spiritual"],
-            datasets: [{
-                label: "Engagement (%)",
-                data: [85, 78, 92, 67],
-                backgroundColor: ["#f87979", "#79a6f8", "#c479f8", "#f8d479"]
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        }
-    });
-}
+    <script src="script.js"></script>
+</body>
+</html>
