@@ -38,8 +38,29 @@
             margin-bottom: 30px;
         }
 
+        .buttons {
+            text-align: center;
+        }
+
         .buttons button {
             margin: 10px 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00aaff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .buttons button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .buttons button:hover:enabled {
+            background-color: #007acc;
         }
 
         .progress-bar-wrapper {
@@ -65,30 +86,64 @@
             border-radius: 8px;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #00aaff;
-            color: white;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2c2c44;
+            border: 1px solid #007acc;
+            border-radius: 8px;
+            padding: 20px;
+            color: #ffffff;
+            text-align: center;
+            z-index: 1000;
+            width: 400px;
+        }
+
+        .modal h3 {
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            background: #007acc;
             border: none;
+            padding: 10px 20px;
             border-radius: 5px;
+            color: white;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            font-size: 16px;
         }
 
-        button[disabled] {
-            background-color: #555;
-            cursor: not-allowed;
+        .modal button:hover {
+            background: #005f99;
         }
 
-        button:hover:enabled {
-            background-color: #007acc;
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
         }
     </style>
 </head>
 <body>
+    <!-- Welcome Screen -->
+    <div class="container active" id="welcome-screen">
+        <h1>Welcome to EngageSense</h1>
+        <p>Analyze and understand your audience’s engagement in real time.</p>
+        <div class="buttons">
+            <button onclick="navigate('upload-record-screen')">Get Started</button>
+        </div>
+    </div>
+
     <!-- Upload/Record Audio Screen -->
-    <div class="container active" id="upload-record-screen">
+    <div class="container" id="upload-record-screen">
         <h1>Upload or Record Audio</h1>
         <p>Upload an audio file or record live with real-time visualization.</p>
         <div>
@@ -105,10 +160,18 @@
             <canvas id="record-waveform" width="600" height="200"></canvas>
             <button id="analyze-record-btn" disabled onclick="analyzeRecording()">Analyze Recording</button>
         </div>
-        <div class="navigation">
+        <div class="buttons">
             <button onclick="navigate('welcome-screen')">← Back</button>
             <button onclick="navigate('analysis-screen')">Next →</button>
         </div>
+    </div>
+
+    <!-- Modal for System Messages -->
+    <div id="overlay"></div>
+    <div id="system-message" class="modal">
+        <h3>System Message</h3>
+        <p id="system-message-text">Analyzing...</p>
+        <button onclick="closeModal()">OK</button>
     </div>
 
     <!-- Progress Bar -->
@@ -131,103 +194,36 @@
             progressBar.style.width = percentage + '%';
         }
 
-        // File Upload Handling
-        const uploadInput = document.getElementById('upload-input');
-        const analyzeUploadBtn = document.getElementById('analyze-upload-btn');
+        // Modal control
+        function showModal(message) {
+            document.getElementById('system-message-text').textContent = message;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('system-message').style.display = 'block';
+        }
 
-        uploadInput.addEventListener('change', () => {
-            if (uploadInput.files.length > 0) {
-                analyzeUploadBtn.disabled = false; // Enable Analyze Upload button
-            }
-        });
+        function closeModal() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('system-message').style.display = 'none';
+        }
 
         function analyzeUpload() {
             updateProgressBar(50);
-            alert('Analyzing uploaded audio...');
+            showModal('Analyzing uploaded audio...');
             setTimeout(() => {
                 updateProgressBar(100);
-                alert('Analysis complete!');
+                closeModal();
                 navigate('results-screen'); // Navigate to results screen
             }, 2000);
         }
-
-        // Recording Functionality
-        const startRecordBtn = document.getElementById('start-record-btn');
-        const stopRecordBtn = document.getElementById('stop-record-btn');
-        const analyzeRecordBtn = document.getElementById('analyze-record-btn');
-        const canvas = document.getElementById('record-waveform');
-        const canvasContext = canvas.getContext('2d');
-
-        let audioContext, analyser, dataArray, bufferLength, mediaRecorder, audioStream;
-
-        startRecordBtn.addEventListener('click', async () => {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            const source = audioContext.createMediaStreamSource(audioStream);
-            source.connect(analyser);
-            analyser.fftSize = 256;
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-
-            mediaRecorder = new MediaRecorder(audioStream);
-            mediaRecorder.start();
-
-            startRecordBtn.disabled = true;
-            stopRecordBtn.disabled = false;
-
-            visualizeWaveform();
-        });
-
-        stopRecordBtn.addEventListener('click', () => {
-            if (mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                audioStream.getTracks().forEach(track => track.stop());
-                startRecordBtn.disabled = false;
-                stopRecordBtn.disabled = true;
-                analyzeRecordBtn.disabled = false; // Enable Analyze Recording button
-            }
-        });
 
         function analyzeRecording() {
             updateProgressBar(50);
-            alert('Analyzing recorded audio...');
+            showModal('Analyzing recorded audio...');
             setTimeout(() => {
                 updateProgressBar(100);
-                alert('Analysis complete!');
+                closeModal();
                 navigate('results-screen'); // Navigate to results screen
             }, 2000);
-        }
-
-        // Visualize Waveform
-        function visualizeWaveform() {
-            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            analyser.getByteTimeDomainData(dataArray);
-
-            canvasContext.lineWidth = 2;
-            canvasContext.strokeStyle = '#00aaff';
-            canvasContext.beginPath();
-
-            const sliceWidth = canvas.width / bufferLength;
-            let x = 0;
-
-            for (let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = (v * canvas.height) / 2;
-
-                if (i === 0) {
-                    canvasContext.moveTo(x, y);
-                } else {
-                    canvasContext.lineTo(x, y);
-                }
-
-                x += sliceWidth;
-            }
-
-            canvasContext.lineTo(canvas.width, canvas.height / 2);
-            canvasContext.stroke();
-
-            requestAnimationFrame(visualizeWaveform);
         }
     </script>
 </body>
