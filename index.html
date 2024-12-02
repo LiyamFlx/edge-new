@@ -8,27 +8,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Welcome Screen -->
     <div id="welcome-screen" class="screen active">
         <h1>Welcome to EngageSense</h1>
-        <p>Your tool for audience engagement analysis</p>
+        <video controls width="300">
+            <source src="intro.mp4" type="video/mp4">
+            Your browser does not support video playback.
+        </video>
         <button class="start-button" onclick="startApp()">Get Started</button>
+        <button class="learn-more-button" onclick="showLearnMore()">Learn More</button>
     </div>
 
+    <!-- Upload/Record Screen -->
     <div id="upload-record-screen" class="screen">
         <h1>Upload or Record Audio</h1>
         <div class="upload-container">
             <h2>Upload Track</h2>
+            <p>Supported formats: MP3, WAV</p>
             <input type="file" id="audioUpload" accept="audio/*">
             <button onclick="analyzeUpload()">Analyze Audio</button>
         </div>
         <div class="record-container">
             <h2>Record Audio</h2>
+            <p>Recording Name: <input type="text" id="recordingName" placeholder="Enter name"></p>
             <button id="startRecording" onclick="startRecording()">Start Recording</button>
             <button id="stopRecording" onclick="stopRecording()" disabled>Stop Recording</button>
             <button onclick="analyzeRecording()">Analyze Recording</button>
         </div>
-        <div id="progress-indicator">
-            <p id="progress-text"></p>
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
         </div>
         <div class="navigation-buttons">
             <button onclick="navigateTo('welcome-screen')">Back</button>
@@ -36,6 +44,7 @@
         </div>
     </div>
 
+    <!-- Results Screen -->
     <div id="results-screen" class="screen">
         <h1>Results Summary</h1>
         <ul id="engagement-results">
@@ -45,6 +54,7 @@
             <li>Spiritual Engagement: <span id="spiritual-engagement">67%</span></li>
         </ul>
         <canvas id="engagementChart" width="400" height="200"></canvas>
+        <button onclick="toggleChartType()">Switch Chart Type</button>
         <div class="navigation-buttons">
             <button onclick="navigateTo('upload-record-screen')">Back</button>
             <button onclick="navigateTo('welcome-screen')">Start Over</button>
