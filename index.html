@@ -65,47 +65,65 @@
             background-color: #005f99;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #00aaff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #007acc;
-        }
-
-        input[type="file"] {
-            display: block;
-            margin: 20px auto;
-        }
-
-        canvas {
-            display: block;
-            margin: 20px auto;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .progress-bar {
-            width: 80%;
+        .progress-bar-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             height: 10px;
-            margin: 20px auto;
             background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            overflow: hidden;
         }
 
         .progress-bar-inner {
             height: 100%;
             background: #00aaff;
-            width: 0;
-            transition: width 0.3s ease;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2c2c44;
+            border: 1px solid #007acc;
+            border-radius: 8px;
+            padding: 20px;
+            color: #ffffff;
+            text-align: center;
+            z-index: 1000;
+            width: 400px;
+        }
+
+        .modal h3 {
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            background: #007acc;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal button:hover {
+            background: #005f99;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
         }
     </style>
 </head>
@@ -126,9 +144,6 @@
         <div>
             <h2>Upload Track</h2>
             <input type="file" id="upload-input" accept=".mp3,.mp4">
-            <div class="progress-bar">
-                <div class="progress-bar-inner" id="upload-progress"></div>
-            </div>
             <button id="analyze-upload-btn" disabled onclick="analyzeUpload()">Analyze Upload</button>
         </div>
         <div>
@@ -144,6 +159,19 @@
             <button onclick="navigate('welcome-screen')">← Back</button>
             <button onclick="navigate('analysis-screen')">Next →</button>
         </div>
+    </div>
+
+    <!-- Modal for System Messages -->
+    <div id="overlay"></div>
+    <div id="system-message" class="modal">
+        <h3>System Message</h3>
+        <p id="system-message-text">Analyzing...</p>
+        <button onclick="closeModal()">OK</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-wrapper">
+        <div class="progress-bar-inner" id="progress-bar"></div>
     </div>
 
     <!-- Real-Time Analysis Screen -->
@@ -162,8 +190,6 @@
         <div class="chart-container">
             <canvas id="results-chart"></canvas>
         </div>
-        <h3 style="text-align: center; margin-bottom: 20px;">Engagement Insights</h3>
-        <ul id="results-list" style="list-style: none; text-align: center; padding: 0;"></ul>
         <div class="navigation">
             <button onclick="navigate('analysis-screen')">← Back</button>
             <button onclick="navigate('thank-you-screen')">Next →</button>
@@ -188,163 +214,43 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // Upload File Functionality
-        const uploadInput = document.getElementById('upload-input');
-        const uploadProgress = document.getElementById('upload-progress');
-        const analyzeUploadBtn = document.getElementById('analyze-upload-btn');
+        // Progress bar control
+        function updateProgressBar(percentage) {
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percentage + '%';
+        }
 
-        uploadInput.addEventListener('change', () => {
-            const file = uploadInput.files[0];
-            if (file) {
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    uploadProgress.style.width = progress + '%';
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        analyzeUploadBtn.disabled = false;
-                    }
-                }, 300);
-            }
-        });
+        // Modal control
+        function showModal(message) {
+            document.getElementById('system-message-text').textContent = message;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('system-message').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('system-message').style.display = 'none';
+        }
 
         function analyzeUpload() {
-            alert("Analyzing uploaded audio...");
+            updateProgressBar(50);
+            showModal('Analyzing uploaded audio...');
+            setTimeout(() => {
+                updateProgressBar(100);
+                closeModal();
+                navigate('results-screen');
+            }, 2000);
         }
-
-        // Recording Functionality
-        const startRecordBtn = document.getElementById('start-record-btn');
-        const stopRecordBtn = document.getElementById('stop-record-btn');
-        const analyzeRecordBtn = document.getElementById('analyze-record-btn');
-        const canvas = document.getElementById('record-waveform');
-        const canvasContext = canvas.getContext('2d');
-
-        let audioContext, analyser, dataArray, bufferLength, mediaRecorder, audioStream;
-
-        startRecordBtn.addEventListener('click', async () => {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            const source = audioContext.createMediaStreamSource(audioStream);
-            source.connect(analyser);
-            analyser.fftSize = 256;
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-
-            mediaRecorder = new MediaRecorder(audioStream);
-            mediaRecorder.start();
-
-            startRecordBtn.disabled = true;
-            stopRecordBtn.disabled = false;
-
-            visualizeWaveform();
-        });
-
-        stopRecordBtn.addEventListener('click', () => {
-            if (mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                audioStream.getTracks().forEach(track => track.stop());
-                startRecordBtn.disabled = false;
-                stopRecordBtn.disabled = true;
-                analyzeRecordBtn.disabled = false;
-            }
-        });
 
         function analyzeRecording() {
-            alert("Analyzing recorded audio...");
+            updateProgressBar(50);
+            showModal('Analyzing recorded audio...');
+            setTimeout(() => {
+                updateProgressBar(100);
+                closeModal();
+                navigate('results-screen');
+            }, 2000);
         }
-
-        function visualizeWaveform() {
-            canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-            analyser.getByteTimeDomainData(dataArray);
-
-            canvasContext.lineWidth = 2;
-            canvasContext.strokeStyle = '#00aaff';
-            canvasContext.beginPath();
-
-            const sliceWidth = canvas.width / bufferLength;
-            let x = 0;
-
-            for (let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = (v * canvas.height) / 2;
-
-                if (i === 0) {
-                    canvasContext.moveTo(x, y);
-                } else {
-                    canvasContext.lineTo(x, y);
-                }
-
-                x += sliceWidth;
-            }
-
-            canvasContext.lineTo(canvas.width, canvas.height / 2);
-            canvasContext.stroke();
-
-            requestAnimationFrame(visualizeWaveform);
-        }
-
-        // Real-Time Chart (placeholder for data)
-        const realTimeChart = new Chart(document.getElementById('real-time-chart'), {
-            type: 'line',
-            data: {
-                labels: ['0s', '1s', '2s', '3s', '4s', '5s'],
-                datasets: [
-                    {
-                        label: 'Engagement',
-                        data: [10, 20, 50, 30, 40, 60],
-                        borderColor: '#00aaff',
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true },
-                    x: { beginAtZero: true }
-                }
-            }
-        });
-
-        // Results Chart
-        const resultsData = {
-            labels: ['Physical', 'Emotional', 'Mental', 'Spiritual'],
-            datasets: [{
-                label: 'Engagement Level (%)',
-                data: [85, 78, 92, 67],
-                backgroundColor: [
-                    'rgba(0, 123, 255, 0.6)',
-                    'rgba(220, 53, 69, 0.6)',
-                    'rgba(40, 167, 69, 0.6)',
-                    'rgba(255, 193, 7, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(0, 123, 255, 1)',
-                    'rgba(220, 53, 69, 1)',
-                    'rgba(40, 167, 69, 1)',
-                    'rgba(255, 193, 7, 1)'
-                ],
-                borderWidth: 1
-            }]
-        };
-
-        const resultsOptions = {
-            responsive: true,
-            plugins: {
-                legend: { display: true, position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true, max: 100 },
-                x: {}
-            }
-        };
-
-        new Chart(document.getElementById('results-chart'), {
-            type: 'bar',
-            data: resultsData,
-            options: resultsOptions
-        });
     </script>
 </body>
 </html>
