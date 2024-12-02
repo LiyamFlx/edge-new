@@ -1,10 +1,30 @@
+/* Shared Styles */
 body {
     font-family: Arial, sans-serif;
-    background-color: #1c1e26;
-    color: #ffffff;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     text-align: center;
     margin: 0;
     padding: 0;
+}
+
+:root {
+    --bg-color: #1c1e26;
+    --text-color: #ffffff;
+}
+
+button {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
 }
 
 .screen {
@@ -16,45 +36,22 @@ body {
     display: block;
 }
 
-button {
-    background-color: #007bff;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 10px;
-    border-radius: 5px;
-}
-
-button:disabled {
+/* Progress Bar */
+#progress-bar-container {
+    width: 100%;
     background-color: #555;
-    cursor: not-allowed;
+    height: 5px;
+    margin: 20px 0;
 }
 
-button:hover {
-    background-color: #0056b3;
+#progress-bar {
+    width: 0;
+    height: 5px;
+    background-color: #00ff00;
 }
 
-.upload-container, .record-container {
-    margin: 20px;
-}
-
-#progress-indicator {
-    margin-top: 20px;
-}
-
-.navigation-buttons {
-    margin-top: 20px;
-}
-
+/* Chart Customizations */
 canvas {
     margin: 20px auto;
     display: block;
-}
-
-#engagement-results {
-    list-style: none;
-    padding: 0;
-    margin: 20px 0;
 }
