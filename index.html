@@ -4,131 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EngageSense</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(120deg, #1e1e2f, #2c2c44);
-            color: #ffffff;
+            background-color: #1c1c2e;
+            color: #fff;
+            text-align: center;
         }
-
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
             display: none;
+            padding: 20px;
         }
-
         .container.active {
             display: block;
         }
-
-        h1 {
-            font-size: 28px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        p {
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .buttons {
-            text-align: center;
-        }
-
-        .buttons button {
-            margin: 10px 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #00aaff;
-            color: white;
+        .start-button, .nav-button, .analyze-button {
+            background-color: #007bff;
+            color: #fff;
             border: none;
-            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 10px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            border-radius: 5px;
         }
-
-        .buttons button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
+        .start-button:hover, .nav-button:hover, .analyze-button:hover {
+            background-color: #0056b3;
         }
-
-        .buttons button:hover:enabled {
-            background-color: #007acc;
+        .progress-bar {
+            width: 80%;
+            margin: 20px auto;
+            height: 5px;
+            background-color: #444;
+            border-radius: 5px;
+            overflow: hidden;
         }
-
-        .progress-bar-wrapper {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
         .progress-bar-inner {
             height: 100%;
-            background: #00aaff;
             width: 0%;
-            transition: width 0.5s ease;
+            background-color: #00ff00;
+            transition: width 0.3s;
         }
-
-        canvas {
-            display: block;
+        .chart {
             margin: 20px auto;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #2c2c44;
-            border: 1px solid #007acc;
-            border-radius: 8px;
-            padding: 20px;
-            color: #ffffff;
-            text-align: center;
-            z-index: 1000;
-            width: 400px;
-        }
-
-        .modal h3 {
-            margin-bottom: 10px;
-        }
-
-        .modal button {
-            background: #007acc;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .modal button:hover {
-            background: #005f99;
-        }
-
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 999;
+            width: 90%;
+            max-width: 500px;
         }
     </style>
 </head>
@@ -136,95 +57,137 @@
     <!-- Welcome Screen -->
     <div class="container active" id="welcome-screen">
         <h1>Welcome to EngageSense</h1>
-        <p>Analyze and understand your audience’s engagement in real time.</p>
-        <div class="buttons">
-            <button onclick="navigate('upload-record-screen')">Get Started</button>
-        </div>
+        <button class="start-button" onclick="showUploadScreen()">Get Started</button>
     </div>
 
-    <!-- Upload/Record Audio Screen -->
-    <div class="container" id="upload-record-screen">
+    <!-- Upload/Record Screen -->
+    <div class="container" id="upload-screen">
         <h1>Upload or Record Audio</h1>
-        <p>Upload an audio file or record live with real-time visualization.</p>
         <div>
-            <h2>Upload Track</h2>
-            <input type="file" id="upload-input" accept=".mp3,.mp4">
-            <button id="analyze-upload-btn" disabled onclick="analyzeUpload()">Analyze Upload</button>
+            <h3>Upload Track</h3>
+            <input type="file" id="audio-upload">
+            <button class="analyze-button" onclick="analyzeUpload()">Analyze Upload</button>
         </div>
         <div>
-            <h2>Record Audio</h2>
-            <div class="buttons">
-                <button id="start-record-btn">Start Recording</button>
-                <button id="stop-record-btn" disabled>Stop Recording</button>
-            </div>
-            <canvas id="record-waveform" width="600" height="200"></canvas>
-            <button id="analyze-record-btn" disabled onclick="analyzeRecording()">Analyze Recording</button>
+            <h3>Record Audio</h3>
+            <button class="analyze-button" onclick="startRecording()">Start Recording</button>
+            <button class="analyze-button" onclick="stopRecording()">Stop Recording</button>
+            <button class="analyze-button" onclick="analyzeRecording()">Analyze Recording</button>
         </div>
-        <div class="buttons">
-            <button onclick="navigate('welcome-screen')">← Back</button>
-            <button onclick="navigate('analysis-screen')">Next →</button>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progress-bar-inner"></div>
         </div>
+        <button class="nav-button" onclick="showWelcomeScreen()">Back</button>
+        <button class="nav-button" onclick="showResultsScreen()">Next</button>
     </div>
 
-    <!-- Modal for System Messages -->
-    <div id="overlay"></div>
-    <div id="system-message" class="modal">
-        <h3>System Message</h3>
-        <p id="system-message-text">Analyzing...</p>
-        <button onclick="closeModal()">OK</button>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-bar-wrapper">
-        <div class="progress-bar-inner" id="progress-bar"></div>
+    <!-- Results Screen -->
+    <div class="container" id="results-screen">
+        <h1>Results Summary</h1>
+        <p id="results-insights"></p>
+        <canvas class="chart" id="results-chart"></canvas>
+        <button class="nav-button" onclick="showUploadScreen()">Back</button>
+        <button class="nav-button" onclick="showWelcomeScreen()">Start Over</button>
     </div>
 
     <script>
-        // Navigation between screens
-        function navigate(screenId) {
-            document.querySelectorAll('.container').forEach(container => {
-                container.classList.remove('active');
+        // Manage Screen Visibility
+        function showWelcomeScreen() {
+            activateScreen("welcome-screen");
+        }
+
+        function showUploadScreen() {
+            activateScreen("upload-screen");
+        }
+
+        function showResultsScreen() {
+            activateScreen("results-screen");
+            displayResults();
+        }
+
+        function activateScreen(screenId) {
+            document.querySelectorAll(".container").forEach(screen => {
+                screen.classList.remove("active");
             });
-            document.getElementById(screenId).classList.add('active');
+            document.getElementById(screenId).classList.add("active");
         }
 
-        // Progress bar control
-        function updateProgressBar(percentage) {
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = percentage + '%';
-        }
-
-        // Modal control
-        function showModal(message) {
-            document.getElementById('system-message-text').textContent = message;
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('system-message').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('system-message').style.display = 'none';
-        }
-
+        // Analyze Upload
         function analyzeUpload() {
-            updateProgressBar(50);
-            showModal('Analyzing uploaded audio...');
-            setTimeout(() => {
-                updateProgressBar(100);
-                closeModal();
-                navigate('results-screen'); // Navigate to results screen
-            }, 2000);
+            const fileInput = document.getElementById("audio-upload");
+            if (fileInput.files.length === 0) {
+                alert("Please upload a file first.");
+                return;
+            }
+            simulateProgress("Analyzing uploaded file...");
+        }
+
+        // Record Audio Functions
+        let isRecording = false;
+        function startRecording() {
+            isRecording = true;
+            simulateProgress("Recording started...");
+        }
+
+        function stopRecording() {
+            if (!isRecording) {
+                alert("Recording has not started yet.");
+                return;
+            }
+            isRecording = false;
+            simulateProgress("Recording stopped...");
         }
 
         function analyzeRecording() {
-            updateProgressBar(50);
-            showModal('Analyzing recorded audio...');
-            setTimeout(() => {
-                updateProgressBar(100);
-                closeModal();
-                navigate('results-screen'); // Navigate to results screen
-            }, 2000);
+            if (!isRecording) {
+                simulateProgress("Analyzing recorded audio...");
+            } else {
+                alert("Please stop the recording first.");
+            }
+        }
+
+        // Simulate Progress
+        function simulateProgress(message) {
+            alert(message);
+            const progressBar = document.getElementById("progress-bar-inner");
+            progressBar.style.width = "0%";
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressBar.style.width = "0%";
+                }
+            }, 300);
+        }
+
+        // Display Results
+        function displayResults() {
+            const insights = {
+                "Physical Engagement": "85%",
+                "Emotional Engagement": "78%",
+                "Mental Engagement": "92%",
+                "Spiritual Engagement": "67%"
+            };
+            const resultsContainer = document.getElementById("results-insights");
+            resultsContainer.innerHTML = Object.entries(insights).map(([key, value]) => `<p>${key}: ${value}</p>`).join("");
+
+            const ctx = document.getElementById("results-chart").getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(insights),
+                    datasets: [{
+                        label: "Engagement (%)",
+                        data: Object.values(insights).map(v => parseInt(v)),
+                        backgroundColor: ["#ff6384", "#36a2eb", "#cc65fe", "#ffce56"]
+                    }]
+                }
+            });
         }
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
