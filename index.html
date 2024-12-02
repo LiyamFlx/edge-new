@@ -1,193 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngageSense</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #1c1c2e;
-            color: #fff;
-            text-align: center;
-        }
-        .container {
-            display: none;
-            padding: 20px;
-        }
-        .container.active {
-            display: block;
-        }
-        .start-button, .nav-button, .analyze-button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .start-button:hover, .nav-button:hover, .analyze-button:hover {
-            background-color: #0056b3;
-        }
-        .progress-bar {
-            width: 80%;
-            margin: 20px auto;
-            height: 5px;
-            background-color: #444;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .progress-bar-inner {
-            height: 100%;
-            width: 0%;
-            background-color: #00ff00;
-            transition: width 0.3s;
-        }
-        .chart {
-            margin: 20px auto;
-            width: 90%;
-            max-width: 500px;
-        }
-    </style>
-</head>
-<body>
-    <!-- Welcome Screen -->
-    <div class="container active" id="welcome-screen">
-        <h1>Welcome to EngageSense</h1>
-        <button class="start-button" onclick="showUploadScreen()">Get Started</button>
-    </div>
+function startApp() {
+    navigateTo("upload-record-screen");
+}
 
-    <!-- Upload/Record Screen -->
-    <div class="container" id="upload-screen">
-        <h1>Upload or Record Audio</h1>
-        <div>
-            <h3>Upload Track</h3>
-            <input type="file" id="audio-upload">
-            <button class="analyze-button" onclick="analyzeUpload()">Analyze Upload</button>
-        </div>
-        <div>
-            <h3>Record Audio</h3>
-            <button class="analyze-button" onclick="startRecording()">Start Recording</button>
-            <button class="analyze-button" onclick="stopRecording()">Stop Recording</button>
-            <button class="analyze-button" onclick="analyzeRecording()">Analyze Recording</button>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-bar-inner" id="progress-bar-inner"></div>
-        </div>
-        <button class="nav-button" onclick="showWelcomeScreen()">Back</button>
-        <button class="nav-button" onclick="showResultsScreen()">Next</button>
-    </div>
+function navigateTo(screenId) {
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+    });
+    document.getElementById(screenId).classList.add("active");
+}
 
-    <!-- Results Screen -->
-    <div class="container" id="results-screen">
-        <h1>Results Summary</h1>
-        <p id="results-insights"></p>
-        <canvas class="chart" id="results-chart"></canvas>
-        <button class="nav-button" onclick="showUploadScreen()">Back</button>
-        <button class="nav-button" onclick="showWelcomeScreen()">Start Over</button>
-    </div>
+function analyzeUpload() {
+    const progressText = document.getElementById("progress-text");
+    progressText.textContent = "Analyzing uploaded file...";
+    setTimeout(() => {
+        progressText.textContent = "Analysis Complete!";
+        navigateTo("results-screen");
+        renderChart();
+    }, 3000);
+}
 
-    <script>
-        // Manage Screen Visibility
-        function showWelcomeScreen() {
-            activateScreen("welcome-screen");
-        }
+function startRecording() {
+    document.getElementById("startRecording").disabled = true;
+    document.getElementById("stopRecording").disabled = false;
+    document.getElementById("progress-text").textContent = "Recording in progress...";
+}
 
-        function showUploadScreen() {
-            activateScreen("upload-screen");
-        }
+function stopRecording() {
+    document.getElementById("startRecording").disabled = false;
+    document.getElementById("stopRecording").disabled = true;
+    document.getElementById("progress-text").textContent = "Recording stopped.";
+}
 
-        function showResultsScreen() {
-            activateScreen("results-screen");
-            displayResults();
-        }
+function analyzeRecording() {
+    const progressText = document.getElementById("progress-text");
+    progressText.textContent = "Analyzing recorded audio...";
+    setTimeout(() => {
+        progressText.textContent = "Analysis Complete!";
+        navigateTo("results-screen");
+        renderChart();
+    }, 3000);
+}
 
-        function activateScreen(screenId) {
-            document.querySelectorAll(".container").forEach(screen => {
-                screen.classList.remove("active");
-            });
-            document.getElementById(screenId).classList.add("active");
-        }
-
-        // Analyze Upload
-        function analyzeUpload() {
-            const fileInput = document.getElementById("audio-upload");
-            if (fileInput.files.length === 0) {
-                alert("Please upload a file first.");
-                return;
-            }
-            simulateProgress("Analyzing uploaded file...");
-        }
-
-        // Record Audio Functions
-        let isRecording = false;
-        function startRecording() {
-            isRecording = true;
-            simulateProgress("Recording started...");
-        }
-
-        function stopRecording() {
-            if (!isRecording) {
-                alert("Recording has not started yet.");
-                return;
-            }
-            isRecording = false;
-            simulateProgress("Recording stopped...");
-        }
-
-        function analyzeRecording() {
-            if (!isRecording) {
-                simulateProgress("Analyzing recorded audio...");
-            } else {
-                alert("Please stop the recording first.");
-            }
-        }
-
-        // Simulate Progress
-        function simulateProgress(message) {
-            alert(message);
-            const progressBar = document.getElementById("progress-bar-inner");
-            progressBar.style.width = "0%";
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                progressBar.style.width = `${progress}%`;
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    progressBar.style.width = "0%";
+function renderChart() {
+    const ctx = document.getElementById("engagementChart").getContext("2d");
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ["Physical", "Emotional", "Mental", "Spiritual"],
+            datasets: [{
+                label: "Engagement (%)",
+                data: [85, 78, 92, 67],
+                backgroundColor: ["#f87979", "#79a6f8", "#c479f8", "#f8d479"]
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
                 }
-            }, 300);
+            }
         }
-
-        // Display Results
-        function displayResults() {
-            const insights = {
-                "Physical Engagement": "85%",
-                "Emotional Engagement": "78%",
-                "Mental Engagement": "92%",
-                "Spiritual Engagement": "67%"
-            };
-            const resultsContainer = document.getElementById("results-insights");
-            resultsContainer.innerHTML = Object.entries(insights).map(([key, value]) => `<p>${key}: ${value}</p>`).join("");
-
-            const ctx = document.getElementById("results-chart").getContext("2d");
-            new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: Object.keys(insights),
-                    datasets: [{
-                        label: "Engagement (%)",
-                        data: Object.values(insights).map(v => parseInt(v)),
-                        backgroundColor: ["#ff6384", "#36a2eb", "#cc65fe", "#ffce56"]
-                    }]
-                }
-            });
-        }
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</body>
-</html>
+    });
+}
